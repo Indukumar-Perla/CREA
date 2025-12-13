@@ -1,4 +1,4 @@
-import { AspectRatio, CreativeLayout, TemplateFamily, ColorPalette } from '../types';
+import { AspectRatio, CreativeLayout, TemplateFamily, ColorPalette, AdvertisingCategory } from '../types';
 import { generateContextualElements } from '../utils/elementGenerator';
 
 const getCanvasDimensions = (ratio: AspectRatio): { width: number; height: number } => {
@@ -12,17 +12,35 @@ const getCanvasDimensions = (ratio: AspectRatio): { width: number; height: numbe
   }
 };
 
+const getTextureByCategory = (category: AdvertisingCategory): 'dots' | 'lines' | 'grid' | 'noise' | 'waves' | 'none' => {
+  switch (category) {
+    case 'product-based':
+      return 'dots';
+    case 'service-based':
+      return 'lines';
+    case 'brand-awareness':
+      return 'grid';
+    case 'lifestyle':
+      return 'waves';
+    default:
+      return 'dots';
+  }
+};
+
 const createCleanMinimalLayout = (
   ratio: AspectRatio,
-  palette: ColorPalette
+  palette: ColorPalette,
+  category: AdvertisingCategory,
+  additionalText?: string
 ): Omit<CreativeLayout, 'ratio' | 'width' | 'height'> => {
   const { width, height } = getCanvasDimensions(ratio);
   const margin = width * 0.08;
 
   if (ratio === '1:1') {
-    return {
+    const layout: any = {
       template: 'clean-minimal',
       background: palette.background,
+      backgroundTexture: getTextureByCategory(category),
       packshot: { x: width * 0.5, y: height * 0.4, width: width * 0.5, height: width * 0.5 },
       logo: { x: margin, y: margin, width: width * 0.15, height: width * 0.15 },
       headline: {
@@ -49,10 +67,25 @@ const createCleanMinimalLayout = (
         },
       ],
     };
+
+    if (additionalText) {
+      layout.additionalText = {
+        x: margin,
+        y: height * 0.82,
+        width: width - margin * 2,
+        height: 40,
+        fontSize: 22,
+        color: palette.primary,
+        text: additionalText,
+      };
+    }
+
+    return layout;
   } else if (ratio === '9:16') {
-    return {
+    const layout: any = {
       template: 'clean-minimal',
       background: palette.background,
+      backgroundTexture: getTextureByCategory(category),
       packshot: { x: width * 0.5, y: height * 0.35, width: width * 0.7, height: width * 0.7 },
       logo: { x: margin, y: margin, width: width * 0.2, height: width * 0.2 },
       headline: {
@@ -79,10 +112,25 @@ const createCleanMinimalLayout = (
         },
       ],
     };
+
+    if (additionalText) {
+      layout.additionalText = {
+        x: margin,
+        y: height * 0.72,
+        width: width - margin * 2,
+        height: 50,
+        fontSize: 26,
+        color: palette.primary,
+        text: additionalText,
+      };
+    }
+
+    return layout;
   } else {
-    return {
+    const layout: any = {
       template: 'clean-minimal',
       background: palette.background,
+      backgroundTexture: getTextureByCategory(category),
       packshot: { x: width * 0.75, y: height * 0.5, width: height * 0.6, height: height * 0.6 },
       logo: { x: margin, y: margin, width: height * 0.15, height: height * 0.15 },
       headline: {
@@ -109,20 +157,37 @@ const createCleanMinimalLayout = (
         },
       ],
     };
+
+    if (additionalText) {
+      layout.additionalText = {
+        x: margin,
+        y: height * 0.5,
+        width: width * 0.45,
+        height: 35,
+        fontSize: 20,
+        color: palette.primary,
+        text: additionalText,
+      };
+    }
+
+    return layout;
   }
 };
 
 const createBoldDynamicLayout = (
   ratio: AspectRatio,
-  palette: ColorPalette
+  palette: ColorPalette,
+  category: AdvertisingCategory,
+  additionalText?: string
 ): Omit<CreativeLayout, 'ratio' | 'width' | 'height'> => {
   const { width, height } = getCanvasDimensions(ratio);
   const margin = width * 0.06;
 
   if (ratio === '1:1') {
-    return {
+    const layout: any = {
       template: 'bold-dynamic',
-      background: `linear-gradient(135deg, ${palette.primary}, ${palette.accent})`,
+      background: palette.primary,
+      backgroundTexture: getTextureByCategory(category),
       packshot: { x: width * 0.65, y: height * 0.55, width: width * 0.55, height: width * 0.55 },
       logo: { x: margin, y: height - margin - width * 0.12, width: width * 0.12, height: width * 0.12 },
       headline: {
@@ -139,7 +204,7 @@ const createBoldDynamicLayout = (
         width: width * 0.35,
         height: 55,
         fontSize: 26,
-        color: palette.primary,
+        color: palette.background,
       },
       decorations: [
         {
@@ -155,10 +220,25 @@ const createBoldDynamicLayout = (
         },
       ],
     };
+
+    if (additionalText) {
+      layout.additionalText = {
+        x: margin,
+        y: margin + 120,
+        width: width * 0.5,
+        height: 50,
+        fontSize: 24,
+        color: '#FFFFFF',
+        text: additionalText,
+      };
+    }
+
+    return layout;
   } else if (ratio === '9:16') {
-    return {
+    const layout: any = {
       template: 'bold-dynamic',
-      background: `linear-gradient(180deg, ${palette.primary}, ${palette.accent})`,
+      background: palette.primary,
+      backgroundTexture: getTextureByCategory(category),
       packshot: { x: width * 0.5, y: height * 0.6, width: width * 0.75, height: width * 0.75 },
       logo: { x: width - margin - width * 0.18, y: margin, width: width * 0.18, height: width * 0.18 },
       headline: {
@@ -175,7 +255,7 @@ const createBoldDynamicLayout = (
         width: width * 0.45,
         height: 65,
         fontSize: 30,
-        color: palette.primary,
+        color: palette.background,
       },
       decorations: [
         {
@@ -186,10 +266,25 @@ const createBoldDynamicLayout = (
         },
       ],
     };
+
+    if (additionalText) {
+      layout.additionalText = {
+        x: margin,
+        y: height * 0.28,
+        width: width - margin * 2,
+        height: 60,
+        fontSize: 28,
+        color: '#FFFFFF',
+        text: additionalText,
+      };
+    }
+
+    return layout;
   } else {
-    return {
+    const layout: any = {
       template: 'bold-dynamic',
-      background: `linear-gradient(90deg, ${palette.primary}, ${palette.accent})`,
+      background: palette.primary,
+      backgroundTexture: getTextureByCategory(category),
       packshot: { x: width * 0.7, y: height * 0.5, width: height * 0.7, height: height * 0.7 },
       logo: { x: width - margin - height * 0.13, y: margin, width: height * 0.13, height: height * 0.13 },
       headline: {
@@ -206,7 +301,7 @@ const createBoldDynamicLayout = (
         width: width * 0.28,
         height: 55,
         fontSize: 26,
-        color: palette.primary,
+        color: palette.background,
       },
       decorations: [
         {
@@ -216,20 +311,37 @@ const createBoldDynamicLayout = (
         },
       ],
     };
+
+    if (additionalText) {
+      layout.additionalText = {
+        x: margin,
+        y: height * 0.42,
+        width: width * 0.4,
+        height: 45,
+        fontSize: 22,
+        color: '#FFFFFF',
+        text: additionalText,
+      };
+    }
+
+    return layout;
   }
 };
 
 const createPremiumSoftLayout = (
   ratio: AspectRatio,
-  palette: ColorPalette
+  palette: ColorPalette,
+  category: AdvertisingCategory,
+  additionalText?: string
 ): Omit<CreativeLayout, 'ratio' | 'width' | 'height'> => {
   const { width, height } = getCanvasDimensions(ratio);
   const margin = width * 0.1;
 
   if (ratio === '1:1') {
-    return {
+    const layout: any = {
       template: 'premium-soft',
-      background: `radial-gradient(circle at 30% 30%, ${palette.secondary}, ${palette.background})`,
+      background: palette.background,
+      backgroundTexture: getTextureByCategory(category),
       packshot: { x: width * 0.5, y: height * 0.45, width: width * 0.5, height: width * 0.5 },
       logo: { x: width - margin - width * 0.14, y: margin, width: width * 0.14, height: width * 0.14 },
       headline: {
@@ -256,10 +368,25 @@ const createPremiumSoftLayout = (
         },
       ],
     };
+
+    if (additionalText) {
+      layout.additionalText = {
+        x: margin,
+        y: height * 0.82,
+        width: width - margin * 2,
+        height: 40,
+        fontSize: 22,
+        color: palette.primary,
+        text: additionalText,
+      };
+    }
+
+    return layout;
   } else if (ratio === '9:16') {
-    return {
+    const layout: any = {
       template: 'premium-soft',
-      background: `radial-gradient(circle at 50% 40%, ${palette.secondary}, ${palette.background})`,
+      background: palette.background,
+      backgroundTexture: getTextureByCategory(category),
       packshot: { x: width * 0.5, y: height * 0.4, width: width * 0.65, height: width * 0.65 },
       logo: { x: width * 0.5 - width * 0.1, y: margin, width: width * 0.2, height: width * 0.2 },
       headline: {
@@ -286,10 +413,25 @@ const createPremiumSoftLayout = (
         },
       ],
     };
+
+    if (additionalText) {
+      layout.additionalText = {
+        x: margin,
+        y: height * 0.75,
+        width: width - margin * 2,
+        height: 50,
+        fontSize: 26,
+        color: palette.primary,
+        text: additionalText,
+      };
+    }
+
+    return layout;
   } else {
-    return {
+    const layout: any = {
       template: 'premium-soft',
-      background: `radial-gradient(circle at 70% 50%, ${palette.secondary}, ${palette.background})`,
+      background: palette.background,
+      backgroundTexture: getTextureByCategory(category),
       packshot: { x: width * 0.28, y: height * 0.5, width: height * 0.65, height: height * 0.65 },
       logo: { x: width - margin - height * 0.12, y: height - margin - height * 0.12, width: height * 0.12, height: height * 0.12 },
       headline: {
@@ -316,6 +458,20 @@ const createPremiumSoftLayout = (
         },
       ],
     };
+
+    if (additionalText) {
+      layout.additionalText = {
+        x: width * 0.5,
+        y: height * 0.47,
+        width: width * 0.42,
+        height: 35,
+        fontSize: 20,
+        color: palette.primary,
+        text: additionalText,
+      };
+    }
+
+    return layout;
   }
 };
 
@@ -324,20 +480,22 @@ export const generateLayout = (
   template: TemplateFamily,
   palette: ColorPalette,
   headline: string = '',
-  decorativeImageUrls: string[] = []
+  decorativeImageUrls: string[] = [],
+  category: AdvertisingCategory = 'product-based',
+  additionalText?: string
 ): CreativeLayout => {
   const { width, height } = getCanvasDimensions(ratio);
 
   let layout;
   switch (template) {
     case 'clean-minimal':
-      layout = createCleanMinimalLayout(ratio, palette);
+      layout = createCleanMinimalLayout(ratio, palette, category, additionalText);
       break;
     case 'bold-dynamic':
-      layout = createBoldDynamicLayout(ratio, palette);
+      layout = createBoldDynamicLayout(ratio, palette, category, additionalText);
       break;
     case 'premium-soft':
-      layout = createPremiumSoftLayout(ratio, palette);
+      layout = createPremiumSoftLayout(ratio, palette, category, additionalText);
       break;
   }
 
@@ -401,6 +559,7 @@ export const generateLayout = (
     logo: { ...baseLayout.logo, isDraggable: true },
     headline: { ...baseLayout.headline, isDraggable: true },
     cta: { ...baseLayout.cta, isDraggable: true },
+    ...(baseLayout.additionalText && { additionalText: { ...baseLayout.additionalText, isDraggable: true } }),
     decorations: combinedDecorations,
   };
 };

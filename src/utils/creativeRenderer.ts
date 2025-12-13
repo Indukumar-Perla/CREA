@@ -1,11 +1,13 @@
 import { CreativeLayout } from '../types';
+import { generateTexturedBackground } from './textureGenerator';
 
 export const renderCreative = async (
   layout: CreativeLayout,
   packshotDataUrl: string,
   logoDataUrl: string,
   headline: string,
-  cta: string
+  cta: string,
+  additionalText?: string
 ): Promise<string> => {
   return new Promise((resolve) => {
     const canvas = document.createElement('canvas');
@@ -41,10 +43,15 @@ export const renderCreative = async (
       if (layout.background.startsWith('linear-gradient') || layout.background.startsWith('radial-gradient')) {
         const gradient = parseGradient(layout.background, ctx, canvas.width, canvas.height);
         ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
       } else {
         ctx.fillStyle = layout.background;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
       }
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      if (layout.backgroundTexture && layout.backgroundTexture !== 'none') {
+        generateTexturedBackground(ctx, canvas.width, canvas.height, layout.background, layout.backgroundTexture);
+      }
 
       layout.decorations.forEach((decoration) => {
         ctx.save();
@@ -156,6 +163,21 @@ export const renderCreative = async (
         layout.headline.width,
         layout.headline.fontSize * 1.2
       );
+
+      if (additionalText && layout.additionalText) {
+        ctx.font = `${layout.additionalText.fontSize}px Arial, sans-serif`;
+        ctx.fillStyle = layout.additionalText.color;
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'top';
+        wrapText(
+          ctx,
+          additionalText,
+          layout.additionalText.x,
+          layout.additionalText.y,
+          layout.additionalText.width,
+          layout.additionalText.fontSize * 1.2
+        );
+      }
 
       if (cta) {
         ctx.fillStyle = layout.cta.color === '#FFFFFF' ? layout.headline.color : layout.cta.color;

@@ -1,5 +1,5 @@
 import { Upload, Image as ImageIcon, X } from 'lucide-react';
-import { CreativeInputs, AspectRatio } from '../types';
+import { CreativeInputs, AspectRatio, AdvertisingCategory } from '../types';
 
 interface InputFormProps {
   inputs: CreativeInputs;
@@ -112,6 +112,33 @@ export const InputForm = ({ inputs, onInputChange, onGenerate, isGenerating }: I
 
         <div>
           <label className="block text-sm font-semibold text-gray-700 mb-2">
+            Advertising Category *
+          </label>
+          <div className="grid grid-cols-2 gap-3">
+            {[
+              { value: 'product-based' as AdvertisingCategory, label: 'Product-Based' },
+              { value: 'service-based' as AdvertisingCategory, label: 'Service-Based' },
+              { value: 'brand-awareness' as AdvertisingCategory, label: 'Brand Awareness' },
+              { value: 'lifestyle' as AdvertisingCategory, label: 'Lifestyle' },
+            ].map((category) => (
+              <button
+                key={category.value}
+                type="button"
+                onClick={() => onInputChange({ advertisingCategory: category.value })}
+                className={`py-3 px-4 rounded-lg font-medium transition ${
+                  inputs.advertisingCategory === category.value
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                {category.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
             Headline *
           </label>
           <input
@@ -123,6 +150,21 @@ export const InputForm = ({ inputs, onInputChange, onGenerate, isGenerating }: I
             maxLength={60}
           />
           <p className="text-xs text-gray-500 mt-1">{inputs.headline.length}/60 characters</p>
+        </div>
+
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
+            Additional Text
+          </label>
+          <input
+            type="text"
+            value={inputs.additionalText}
+            onChange={(e) => onInputChange({ additionalText: e.target.value })}
+            placeholder="Optional description or tagline"
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            maxLength={80}
+          />
+          <p className="text-xs text-gray-500 mt-1">{inputs.additionalText.length}/80 characters</p>
         </div>
 
         <div>
@@ -187,24 +229,46 @@ export const InputForm = ({ inputs, onInputChange, onGenerate, isGenerating }: I
 
         <div>
           <label className="block text-sm font-semibold text-gray-700 mb-2">
-            Brand Color
+            Primary Brand Color
           </label>
           <div className="flex items-center space-x-3">
             <input
               type="color"
-              value={inputs.brandColor}
-              onChange={(e) => onInputChange({ brandColor: e.target.value })}
+              value={inputs.primaryColor}
+              onChange={(e) => onInputChange({ primaryColor: e.target.value })}
               className="h-12 w-20 border border-gray-300 rounded cursor-pointer"
             />
             <input
               type="text"
-              value={inputs.brandColor}
-              onChange={(e) => onInputChange({ brandColor: e.target.value })}
+              value={inputs.primaryColor}
+              onChange={(e) => onInputChange({ primaryColor: e.target.value })}
               className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder="#3B82F6"
             />
           </div>
           <p className="text-xs text-gray-500 mt-1">Leave default to auto-extract from logo</p>
+        </div>
+
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
+            Secondary Brand Color
+          </label>
+          <div className="flex items-center space-x-3">
+            <input
+              type="color"
+              value={inputs.secondaryColor}
+              onChange={(e) => onInputChange({ secondaryColor: e.target.value })}
+              className="h-12 w-20 border border-gray-300 rounded cursor-pointer"
+            />
+            <input
+              type="text"
+              value={inputs.secondaryColor}
+              onChange={(e) => onInputChange({ secondaryColor: e.target.value })}
+              className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="#93C5FD"
+            />
+          </div>
+          <p className="text-xs text-gray-500 mt-1">Optional secondary color for accents</p>
         </div>
 
         <div>

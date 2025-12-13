@@ -18,8 +18,11 @@ function App() {
     decorativeElements: [],
     headline: '',
     cta: '',
-    brandColor: '#3B82F6',
+    additionalText: '',
+    primaryColor: '#3B82F6',
+    secondaryColor: '#93C5FD',
     selectedRatios: [],
+    advertisingCategory: 'product-based',
   });
   const [generatedCreatives, setGeneratedCreatives] = useState<GeneratedCreative[]>([]);
   const [packshotDataUrl, setPackshotDataUrl] = useState('');
@@ -53,13 +56,17 @@ function App() {
       setLogoDataUrl(logoProcessed);
       setDecorativeElementsDataUrls(decorativeUrls);
 
-      let brandColor = inputs.brandColor;
-      if (brandColor === '#3B82F6') {
+      let primaryColor = inputs.primaryColor;
+      let secondaryColor = inputs.secondaryColor;
+
+      if (primaryColor === '#3B82F6') {
         const extractedColors = await extractDominantColors(inputs.logo);
-        brandColor = extractedColors[0] || '#3B82F6';
+        primaryColor = extractedColors[0] || '#3B82F6';
+        secondaryColor = extractedColors[1] || '#93C5FD';
       }
 
-      const palette = generateColorPalette(brandColor);
+      const palette = generateColorPalette(primaryColor);
+      palette.secondary = secondaryColor;
       setColorPalette(palette);
 
       const templates: TemplateFamily[] = ['clean-minimal', 'bold-dynamic', 'premium-soft'];
@@ -72,7 +79,9 @@ function App() {
           template,
           palette,
           inputs.headline,
-          decorativeUrls
+          decorativeUrls,
+          inputs.advertisingCategory,
+          inputs.additionalText
         );
 
         const dataUrl = await renderCreative(
@@ -80,7 +89,8 @@ function App() {
           packshotProcessed,
           logoProcessed,
           inputs.headline,
-          inputs.cta
+          inputs.cta,
+          inputs.additionalText
         );
 
         creatives.push({
@@ -124,8 +134,10 @@ function App() {
           logoDataUrl={logoDataUrl}
           headline={inputs.headline}
           cta={inputs.cta}
+          additionalText={inputs.additionalText}
           brandColor={colorPalette.primary}
           colorPalette={colorPalette}
+          advertisingCategory={inputs.advertisingCategory}
           onBack={handleBack}
         />
       )}

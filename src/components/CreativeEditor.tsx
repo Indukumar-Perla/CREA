@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Download, Edit3, Palette, Layout } from 'lucide-react';
-import { GeneratedCreative, TemplateFamily, ColorPalette, CreativeLayout } from '../types';
+import { GeneratedCreative, TemplateFamily, ColorPalette, CreativeLayout, AdvertisingCategory } from '../types';
 import { generateLayout, templateNames } from '../templates/templateGenerator';
 import { renderCreative } from '../utils/creativeRenderer';
 import { compressImage } from '../utils/imageProcessor';
@@ -12,8 +12,10 @@ interface CreativeEditorProps {
   logoDataUrl: string;
   headline: string;
   cta: string;
+  additionalText: string;
   brandColor: string;
   colorPalette: ColorPalette;
+  advertisingCategory: AdvertisingCategory;
   onBack: () => void;
 }
 
@@ -23,14 +25,17 @@ export const CreativeEditor = ({
   logoDataUrl,
   headline: initialHeadline,
   cta: initialCta,
+  additionalText: initialAdditionalText,
   brandColor,
   colorPalette,
+  advertisingCategory,
   onBack,
 }: CreativeEditorProps) => {
   const [creatives, setCreatives] = useState(initialCreatives);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [editedHeadline, setEditedHeadline] = useState(initialHeadline);
   const [editedCta, setEditedCta] = useState(initialCta);
+  const [editedAdditionalText, setEditedAdditionalText] = useState(initialAdditionalText);
   const [selectedTemplate, setSelectedTemplate] = useState<TemplateFamily>(
     initialCreatives[0]?.layout.template || 'clean-minimal'
   );
@@ -51,14 +56,23 @@ export const CreativeEditor = ({
     setIsRegenerating(true);
 
     const newPalette = { ...colorPalette, primary: selectedBgColor };
-    const newLayout = generateLayout(currentCreative.ratio, selectedTemplate, newPalette, editedHeadline);
+    const newLayout = generateLayout(
+      currentCreative.ratio,
+      selectedTemplate,
+      newPalette,
+      editedHeadline,
+      [],
+      advertisingCategory,
+      editedAdditionalText
+    );
 
     const newDataUrl = await renderCreative(
       newLayout,
       packshotDataUrl,
       logoDataUrl,
       editedHeadline,
-      editedCta
+      editedCta,
+      editedAdditionalText
     );
 
     const updatedCreatives = [...creatives];
@@ -143,6 +157,7 @@ export const CreativeEditor = ({
                   logoDataUrl={logoDataUrl}
                   headline={editedHeadline}
                   cta={editedCta}
+                  additionalText={editedAdditionalText}
                   onLayoutChange={handleLayoutChange}
                 />
               </div>
@@ -192,6 +207,19 @@ export const CreativeEditor = ({
                     onChange={(e) => setEditedHeadline(e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                     maxLength={60}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Additional Text
+                  </label>
+                  <input
+                    type="text"
+                    value={editedAdditionalText}
+                    onChange={(e) => setEditedAdditionalText(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    maxLength={80}
                   />
                 </div>
 
