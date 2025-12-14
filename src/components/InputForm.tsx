@@ -40,8 +40,8 @@ export const InputForm = ({ inputs, onInputChange, onGenerate, isGenerating }: I
 
   return (
     <div className="bg-white rounded-xl shadow-lg p-8 max-w-2xl mx-auto">
-      <h1 className="text-3xl font-bold text-gray-900 mb-2">Retail Media Creative Tool</h1>
-      <p className="text-gray-600 mb-8">Generate campaign-ready ad creatives in seconds</p>
+      <h1 className="text-3xl font-bold text-gray-900 mb-2">Creative Retail Engine for Advertisers</h1>
+      <p className="text-gray-600 mb-8">Generate campaign-ready ad creatives in seconds, JUST LIKE THAT!</p>
 
       <div className="space-y-6">
         <div className="grid grid-cols-2 gap-4">
