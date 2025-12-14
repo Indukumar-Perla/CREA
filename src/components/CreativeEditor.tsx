@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Download, Edit3, Palette, Layout } from 'lucide-react';
+import { Download, Edit3, Palette, Layout, RotateCw, Trash2 } from 'lucide-react';
 import { GeneratedCreative, TemplateFamily, ColorPalette, CreativeLayout, AdvertisingCategory } from '../types';
 import { generateLayout, templateNames } from '../templates/templateGenerator';
 import { renderCreative } from '../utils/creativeRenderer';
@@ -41,12 +41,22 @@ export const CreativeEditor = ({
   );
   const [selectedBgColor, setSelectedBgColor] = useState(brandColor);
   const [isRegenerating, setIsRegenerating] = useState(false);
+  const [selectedElement, setSelectedElement] = useState<{ type: string; index?: number } | null>(null);
+  const [headlineFontSize, setHeadlineFontSize] = useState(initialCreatives[0]?.layout.headline.fontSize || 42);
+  const [ctaFontSize, setCtaFontSize] = useState(initialCreatives[0]?.layout.cta.fontSize || 24);
+  const [additionalTextFontSize, setAdditionalTextFontSize] = useState(
+    initialCreatives[0]?.layout.additionalText?.fontSize || 22
+  );
 
   const currentCreative = creatives[selectedIndex];
 
   useEffect(() => {
     if (currentCreative) {
       setSelectedTemplate(currentCreative.layout.template);
+      setHeadlineFontSize(currentCreative.layout.headline.fontSize);
+      setCtaFontSize(currentCreative.layout.cta.fontSize);
+      setAdditionalTextFontSize(currentCreative.layout.additionalText?.fontSize || 22);
+      setSelectedElement(null);
     }
   }, [selectedIndex, currentCreative]);
 
@@ -94,6 +104,51 @@ export const CreativeEditor = ({
       dataUrl: '',
     };
     setCreatives(updatedCreatives);
+  };
+
+  const handleDeleteElement = () => {
+    if (!selectedElement || !currentCreative) return;
+
+    const newLayout = { ...currentCreative.layout };
+
+    if (selectedElement.type === 'decoration' && selectedElement.index !== undefined) {
+      newLayout.decorations = newLayout.decorations.filter((_, idx) => idx !== selectedElement.index);
+    }
+
+    handleLayoutChange(newLayout);
+    setSelectedElement(null);
+  };
+
+  const handleRotateElement = (angleDelta: number) => {
+    if (!selectedElement || !currentCreative) return;
+
+    const newLayout = { ...currentCreative.layout };
+
+    if (selectedElement.type === 'decoration' && selectedElement.index !== undefined) {
+      const deco = { ...newLayout.decorations[selectedElement.index] };
+      deco.rotation = (deco.rotation || 0) + angleDelta;
+      newLayout.decorations[selectedElement.index] = deco;
+      handleLayoutChange(newLayout);
+    }
+  };
+
+  const updateFontSize = (element: 'headline' | 'cta' | 'additionalText', size: number) => {
+    if (!currentCreative) return;
+
+    const newLayout = { ...currentCreative.layout };
+
+    if (element === 'headline') {
+      newLayout.headline = { ...newLayout.headline, fontSize: size };
+      setHeadlineFontSize(size);
+    } else if (element === 'cta') {
+      newLayout.cta = { ...newLayout.cta, fontSize: size };
+      setCtaFontSize(size);
+    } else if (element === 'additionalText' && newLayout.additionalText) {
+      newLayout.additionalText = { ...newLayout.additionalText, fontSize: size };
+      setAdditionalTextFontSize(size);
+    }
+
+    handleLayoutChange(newLayout);
   };
 
   const downloadCreative = async (creative: GeneratedCreative) => {
@@ -158,7 +213,11 @@ export const CreativeEditor = ({
                   headline={editedHeadline}
                   cta={editedCta}
                   additionalText={editedAdditionalText}
+                  selectedElement={selectedElement}
                   onLayoutChange={handleLayoutChange}
+                  onElementSelect={setSelectedElement}
+                  onDeleteElement={handleDeleteElement}
+                  onRotateElement={handleRotateElement}
                 />
               </div>
             </div>
@@ -199,46 +258,172 @@ export const CreativeEditor = ({
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Headline
+                    Headline * (Font: {headlineFontSize}px)
                   </label>
-                  <input
-                    type="text"
-                    value={editedHeadline}
-                    onChange={(e) => setEditedHeadline(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                    maxLength={60}
-                  />
+                  <div className="space-y-2">
+                    <input
+                      type="text"
+                      value={editedHeadline}
+                      onChange={(e) => setEditedHeadline(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                      maxLength={60}
+                    />
+                    <div className="flex items-center space-x-2">
+                      <button
+                        type="button"
+                        onClick={() => updateFontSize('headline', Math.max(14, headlineFontSize - 2))}
+                        className="px-3 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
+                      >
+                        -
+                      </button>
+                      <input
+                        type="range"
+                        min="14"
+                        max="72"
+                        value={headlineFontSize}
+                        onChange={(e) => updateFontSize('headline', parseInt(e.target.value))}
+                        className="flex-1"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => updateFontSize('headline', Math.min(72, headlineFontSize + 2))}
+                        className="px-3 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
                 </div>
 
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Additional Text
+                    Additional Text {editedAdditionalText && `(Font: ${additionalTextFontSize}px)`}
                   </label>
-                  <input
-                    type="text"
-                    value={editedAdditionalText}
-                    onChange={(e) => setEditedAdditionalText(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                    maxLength={80}
-                  />
+                  <div className="space-y-2">
+                    <input
+                      type="text"
+                      value={editedAdditionalText}
+                      onChange={(e) => setEditedAdditionalText(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                      maxLength={80}
+                    />
+                    {editedAdditionalText && (
+                      <div className="flex items-center space-x-2">
+                        <button
+                          type="button"
+                          onClick={() => updateFontSize('additionalText', Math.max(12, additionalTextFontSize - 2))}
+                          className="px-3 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
+                        >
+                          -
+                        </button>
+                        <input
+                          type="range"
+                          min="12"
+                          max="42"
+                          value={additionalTextFontSize}
+                          onChange={(e) => updateFontSize('additionalText', parseInt(e.target.value))}
+                          className="flex-1"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => updateFontSize('additionalText', Math.min(42, additionalTextFontSize + 2))}
+                          className="px-3 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
+                        >
+                          +
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Call-to-Action
+                    Call-to-Action (Font: {ctaFontSize}px)
                   </label>
-                  <input
-                    type="text"
-                    value={editedCta}
-                    onChange={(e) => setEditedCta(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                    maxLength={20}
-                  />
+                  <div className="space-y-2">
+                    <input
+                      type="text"
+                      value={editedCta}
+                      onChange={(e) => setEditedCta(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                      maxLength={20}
+                    />
+                    <div className="flex items-center space-x-2">
+                      <button
+                        type="button"
+                        onClick={() => updateFontSize('cta', Math.max(12, ctaFontSize - 2))}
+                        className="px-3 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
+                      >
+                        -
+                      </button>
+                      <input
+                        type="range"
+                        min="12"
+                        max="48"
+                        value={ctaFontSize}
+                        onChange={(e) => updateFontSize('cta', parseInt(e.target.value))}
+                        className="flex-1"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => updateFontSize('cta', Math.min(48, ctaFontSize + 2))}
+                        className="px-3 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
 
             <div className="bg-white rounded-xl shadow-lg p-6">
+              {selectedElement && (
+                <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="font-semibold text-green-900">
+                      {selectedElement.type === 'decoration' ? 'Decorative Element' : 'Selected Element'} Selected
+                    </h3>
+                    <button
+                      onClick={() => setSelectedElement(null)}
+                      className="text-xs px-2 py-1 bg-green-200 text-green-900 rounded hover:bg-green-300"
+                    >
+                      Deselect
+                    </button>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleRotateElement(-15)}
+                        className="flex items-center gap-2 flex-1 px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                      >
+                        <RotateCw size={16} />
+                        Rotate Left
+                      </button>
+                      <button
+                        onClick={() => handleRotateElement(15)}
+                        className="flex items-center gap-2 flex-1 px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                      >
+                        <RotateCw size={16} style={{ transform: 'scaleX(-1)' }} />
+                        Rotate Right
+                      </button>
+                    </div>
+                    {selectedElement.type === 'decoration' && (
+                      <button
+                        onClick={handleDeleteElement}
+                        className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+                      >
+                        <Trash2 size={16} />
+                        Delete Element
+                      </button>
+                    )}
+                  </div>
+                  <p className="text-xs text-gray-600 mt-3">
+                    Keyboard shortcuts: Delete/Backspace to remove, Left/Right arrows to rotate 5°
+                  </p>
+                </div>
+              )}
+
               <div className="flex items-center space-x-2 mb-4">
                 <Layout size={20} className="text-gray-700" />
                 <h3 className="text-lg font-bold text-gray-900">Template</h3>

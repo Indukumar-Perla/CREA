@@ -9,7 +9,11 @@ interface DraggableCanvasProps {
   headline: string;
   cta: string;
   additionalText?: string;
+  selectedElement?: { type: string; index?: number } | null;
   onLayoutChange: (newLayout: CreativeLayout) => void;
+  onElementSelect?: (element: { type: string; index?: number } | null) => void;
+  onDeleteElement?: () => void;
+  onRotateElement?: (angle: number) => void;
 }
 
 interface DragState {
@@ -30,7 +34,11 @@ export const DraggableCanvas = ({
   headline,
   cta,
   additionalText,
+  selectedElement: propSelectedElement,
   onLayoutChange,
+  onElementSelect,
+  onDeleteElement,
+  onRotateElement,
 }: DraggableCanvasProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const overlayRef = useRef<HTMLCanvasElement>(null);
@@ -48,6 +56,7 @@ export const DraggableCanvas = ({
   const [scale, setScale] = useState(1);
   const [preview, setPreview] = useState('');
   const [hoveredElement, setHoveredElement] = useState<{ type: string; index?: number } | null>(null);
+  const [selectedElement, setSelectedElement] = useState<{ type: string; index?: number } | null>(propSelectedElement || null);
 
   useEffect(() => {
     renderCanvas();
@@ -55,7 +64,31 @@ export const DraggableCanvas = ({
 
   useEffect(() => {
     drawOverlay();
-  }, [preview, hoveredElement, dragState, scale]);
+  }, [preview, hoveredElement, dragState, scale, selectedElement]);
+
+  useEffect(() => {
+    setSelectedElement(propSelectedElement || null);
+  }, [propSelectedElement]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!selectedElement) return;
+
+      if (e.key === 'Delete' || e.key === 'Backspace') {
+        e.preventDefault();
+        onDeleteElement?.();
+      } else if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        onRotateElement?.(-5);
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        onRotateElement?.(5);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedElement, onDeleteElement, onRotateElement]);
 
   useEffect(() => {
     updateCanvasSize();
@@ -89,7 +122,7 @@ export const DraggableCanvas = ({
     canvas.height = layout.height;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    const elementToDraw = hoveredElement ||
+    const elementToDraw = selectedElement || hoveredElement ||
       (dragState.isDragging ? { type: dragState.elementType, index: dragState.elementIndex } : null);
 
     if (!elementToDraw) return;
@@ -142,13 +175,14 @@ export const DraggableCanvas = ({
     }
 
     if (bounds) {
-      ctx.strokeStyle = '#3B82F6';
-      ctx.lineWidth = 2;
+      const isSelected = selectedElement && selectedElement.type === elementToDraw.type && selectedElement.index === elementToDraw.index;
+      ctx.strokeStyle = isSelected ? '#10B981' : '#3B82F6';
+      ctx.lineWidth = isSelected ? 3 : 2;
       ctx.setLineDash([5, 5]);
       ctx.strokeRect(bounds.x, bounds.y, bounds.width, bounds.height);
 
       const handleSize = 8;
-      ctx.fillStyle = '#3B82F6';
+      ctx.fillStyle = isSelected ? '#10B981' : '#3B82F6';
       ctx.setLineDash([]);
 
       const handles = [
@@ -161,6 +195,11 @@ export const DraggableCanvas = ({
       handles.forEach((handle) => {
         ctx.fillRect(handle.x - handleSize / 2, handle.y - handleSize / 2, handleSize, handleSize);
       });
+
+      if (isSelected) {
+        ctx.fillStyle = 'rgba(16, 185, 129, 0.2)';
+        ctx.fillRect(bounds.x, bounds.y, bounds.width, bounds.height);
+      }
     }
   };
 
@@ -259,6 +298,8 @@ export const DraggableCanvas = ({
     const element = getElementAtPos(pos.x, pos.y);
 
     if (element) {
+      setSelectedElement(element);
+      onElementSelect?.(element);
       let startPos = null;
       if (element.type === 'decoration' && element.index !== undefined) {
         startPos = { ...layout.decorations[element.index].position };
@@ -361,6 +402,13 @@ export const DraggableCanvas = ({
     setHoveredElement(null);
     if (dragState.isDragging) {
       handleMouseUp();
+    }
+  };
+
+  const handleDeleteClick = () => {
+    if (selectedElement) {
+      onDeleteElement?.();
+      setSelectedElement(null);
     }
   };
 
